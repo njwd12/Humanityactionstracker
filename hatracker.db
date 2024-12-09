@@ -1,0 +1,64 @@
+-- Табела за корисници
+CREATE TABLE Users (
+    UserID INT AUTO_INCREMENT PRIMARY KEY,
+    FullName VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    PasswordHash VARCHAR(255) NOT NULL,
+    Role ENUM('Admin', 'Organizer', 'Donor') NOT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Табела за хуманитарни акции
+CREATE TABLE Campaigns (
+    CampaignID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(150) NOT NULL,
+    Description TEXT NOT NULL,
+    StartDate DATE NOT NULL,
+    EndDate DATE,
+    TargetAmount DECIMAL(12, 2) NOT NULL,
+    OrganizerID INT NOT NULL,
+    Status ENUM('Active', 'Completed', 'Cancelled') DEFAULT 'Active',
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (OrganizerID) REFERENCES Users(UserID)
+);
+
+-- Табела за донации
+CREATE TABLE Donations (
+    DonationID INT AUTO_INCREMENT PRIMARY KEY,
+    CampaignID INT NOT NULL,
+    DonorID INT NOT NULL,
+    Amount DECIMAL(10, 2) NOT NULL,
+    DonationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (CampaignID) REFERENCES Campaigns(CampaignID),
+    FOREIGN KEY (DonorID) REFERENCES Users(UserID)
+);
+
+-- Табела за приматели
+CREATE TABLE Beneficiaries (
+    BeneficiaryID INT AUTO_INCREMENT PRIMARY KEY,
+    FullName VARCHAR(100) NOT NULL,
+    ContactInfo VARCHAR(150),
+    Address VARCHAR(255),
+    Description TEXT NOT NULL,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Врска меѓу акции и приматели
+CREATE TABLE CampaignBeneficiaries (
+    CampaignID INT NOT NULL,
+    BeneficiaryID INT NOT NULL,
+    AllocationAmount DECIMAL(10, 2),
+    PRIMARY KEY (CampaignID, BeneficiaryID),
+    FOREIGN KEY (CampaignID) REFERENCES Campaigns(CampaignID),
+    FOREIGN KEY (BeneficiaryID) REFERENCES Beneficiaries(BeneficiaryID)
+);
+
+-- Табела за трошоци
+CREATE TABLE Expenses (
+    ExpenseID INT AUTO_INCREMENT PRIMARY KEY,
+    CampaignID INT NOT NULL,
+    Description TEXT NOT NULL,
+    Amount DECIMAL(10, 2) NOT NULL,
+    ExpenseDate DATE NOT NULL,
+    FOREIGN KEY (CampaignID) REFERENCES Campaigns(CampaignID)
+);
