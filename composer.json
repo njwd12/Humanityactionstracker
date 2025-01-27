@@ -1,0 +1,20 @@
+{
+    "name": "vendor/haapp",
+    "description": "app using php and mysql",
+    "type": "project",
+    "require": {
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vendor\\Haapp\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Nenad Jovanovski",
+            "email": "jovanovskinenad1@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}

@@ -1,10 +1,15 @@
 <?php
 require_once('db_connection.php');
 
-// Избор на одобрени кампањи
-$sql = "SELECT * FROM `campaigns` WHERE `Status` = 'approved'";
-$result = $conn->query($sql);
+// Ажурирање на статусот на кампањите (завршени ако EndDate е поминат)
+$sql_update_status = "UPDATE campaigns 
+                      SET Status = 'completed' 
+                      WHERE EndDate < CURDATE() AND Status != 'completed'";
+$conn->query($sql_update_status);
 
+// Избор на одобрени кампањи
+$sql = "SELECT * FROM `campaigns` WHERE `Status` = 'approved' OR `Status` = 'completed'";
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -72,7 +77,7 @@ $result = $conn->query($sql);
         <h1 class="text-center mb-4">Сите Кампањи</h1>
 
         <?php
-        // Подготовка и извршување на SQL запросот
+        // Проверка и прикажување на кампањите
         if ($stmt = mysqli_prepare($conn, $sql)) {
             if (mysqli_stmt_execute($stmt)) {
                 $result = mysqli_stmt_get_result($stmt);
@@ -83,6 +88,11 @@ $result = $conn->query($sql);
                     
                     // Прикажи секоја кампања во форма на карта
                     while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                        // Проверка на статусот
+                        $status_text = ($row['Status'] === 'completed') 
+                            ? '<span class="text-danger">Завршен</span>' 
+                            : '<span class="text-success">Во тек</span>';
+
                         echo "
                             <div class='col-md-6 col-lg-4'>
                                 <div class='card h-100 shadow-sm'>
@@ -91,7 +101,17 @@ $result = $conn->query($sql);
                                         <p class='card-text'>" . htmlspecialchars($row['Description']) . "</p>
                                         <p><strong>Почеток:</strong> " . htmlspecialchars($row['StartDate']) . "</p>
                                         <p><strong>Крај:</strong> " . htmlspecialchars($row['EndDate']) . "</p>
-                                        <p><strong>ID на кампањата:</strong> " . htmlspecialchars($row['CampaignID']) . "</p>
+                                        <p><strong>Status:</strong> $status_text</p>
+                                        <p><strong>Пријавени лица:</strong> " . htmlspecialchars($row['RegisteredUsers']) . "</p>
+                                        <p><strong>ID на кампањата:</strong> " . htmlspecialchars($row['CampaignID']) . "</p>";
+                                        
+                        // Добави копче за донaција ако статусот е во тек
+                        if ($row['Status'] === 'approved' || $row['Status'] === 'in progress') {
+                            echo "
+                                <a href='mydonation.php?campaign_id=" . $row['CampaignID'] . "' class='btn btn-primary mt-3'>Направи Донaција</a>";
+                        }
+
+                        echo "
                                     </div>
                                 </div>
                             </div>";

@@ -1,21 +1,20 @@
 <?php
-// Врска со базата на податоци
-include 'db_connection.php';
+require_once('db_connection.php');
+session_start();
 
-// Ако е испратен ID на кампања за одбивање
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-
-    // SQL за ажурирање на статусот на кампањата
-    $sql = "UPDATE campaigns SET status='rejected' WHERE id=?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-
-    if ($stmt->execute()) {
-        echo "Кампањата е одбиена!";
+// Check if the campaign ID is set
+if (isset($_POST['CampaignID'])) {
+    $campaignID = $_POST['CampaignID'];
+    
+    // Update the campaign status to "rejected"
+    $stmt = $conn->prepare("UPDATE campaigns SET Status = 'rejected' WHERE CampaignID = ?");
+    if ($stmt->execute([$campaignID])) {
+        // Redirect to the dashboard
         header("Location: admin_dashboard.php");
+        exit();
     } else {
-        echo "Грешка при одбивање на кампањата: " . $conn->error;
+        // Handle error if update fails
+        echo "Грешка при отфрлање на кампањата.";
     }
 }
 ?>

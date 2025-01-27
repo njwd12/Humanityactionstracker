@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 require_once('db_connection.php'); // Connect to the database
 
 // Start the session and check if the user is logged in
@@ -13,8 +15,8 @@ $userID = $_SESSION['user_id']; // Get the logged-in user's ID from session
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['campaign_id'])) {
     $campaignID = intval($_POST['campaign_id']); // Safely retrieve CampaignID
 
-    // Check if the campaign exists
-    $campaignCheckSQL = "SELECT * FROM campaigns WHERE CampaignID = ?";
+    // Check if the campaign exists and its end date
+    $campaignCheckSQL = "SELECT EndDate FROM campaigns WHERE CampaignID = ?";
     $stmt = mysqli_prepare($conn, $campaignCheckSQL);
     mysqli_stmt_bind_param($stmt, "i", $campaignID);
     mysqli_stmt_execute($stmt);
@@ -24,39 +26,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['campaign_id'])) {
         $message = "Кампањата не постои.";
         $messageType = "danger"; // Error message
     } else {
-        // Check if the user exists (checking if the user exists in the users table)
-        $userCheckSQL = "SELECT * FROM users WHERE UserID = ?";
-        $stmt = mysqli_prepare($conn, $userCheckSQL);
-        mysqli_stmt_bind_param($stmt, "i", $userID); // Check if the user exists
-        mysqli_stmt_execute($stmt);
-        $userResult = mysqli_stmt_get_result($stmt);
+        $campaign = mysqli_fetch_assoc($campaignResult);
 
-        if (mysqli_num_rows($userResult) === 0) {
-            $message = "Корисникот не постои.";
-            $messageType = "danger"; // Error message
+        // Check if the campaign has ended
+        $currentDate = date("Y-m-d");
+        if ($campaign['EndDate'] < $currentDate) {
+            $message = "Кампањата е веќе завршена.";
+            $messageType = "warning"; // Warning message
         } else {
-            // Check if the user is already registered for this campaign
-            $checkSQL = "SELECT * FROM campaignbeneficiaries WHERE CampaignID = ? AND UserID = ?";
-            $stmt = mysqli_prepare($conn, $checkSQL);
-            mysqli_stmt_bind_param($stmt, "ii", $campaignID, $userID);
+            // Check if the user exists (checking if the user exists in the users table)
+            $userCheckSQL = "SELECT * FROM users WHERE UserID = ?";
+            $stmt = mysqli_prepare($conn, $userCheckSQL);
+            mysqli_stmt_bind_param($stmt, "i", $userID);
             mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
+            $userResult = mysqli_stmt_get_result($stmt);
 
-            if (mysqli_num_rows($result) > 0) {
-                $message = "Веќе сте пријавени за оваа кампања.";
+            if (mysqli_num_rows($userResult) === 0) {
+                $message = "Корисникот не постои.";
                 $messageType = "danger"; // Error message
             } else {
-                // Add the user to the campaign
-                $insertSQL = "INSERT INTO campaignbeneficiaries (CampaignID, UserID) VALUES (?, ?)";
-                $stmt = mysqli_prepare($conn, $insertSQL);
+                // Check if the user is already registered for this campaign
+                $checkSQL = "SELECT * FROM campaignbeneficiaries WHERE CampaignID = ? AND UserID = ?";
+                $stmt = mysqli_prepare($conn, $checkSQL);
                 mysqli_stmt_bind_param($stmt, "ii", $campaignID, $userID);
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
 
-                if (mysqli_stmt_execute($stmt)) {
-                    $message = "Успешно се пријавивте за кампањата!";
-                    $messageType = "success"; // Success message
-                } else {
-                    $message = "Настана грешка при пријавувањето. Обидете се повторно.";
+                if (mysqli_num_rows($result) > 0) {
+                    $message = "Веќе сте пријавени за оваа кампања.";
                     $messageType = "danger"; // Error message
+                } else {
+                    // Add the user to the campaign
+                    $insertSQL = "INSERT INTO campaignbeneficiaries (CampaignID, UserID) VALUES (?, ?)";
+                    $stmt = mysqli_prepare($conn, $insertSQL);
+                    mysqli_stmt_bind_param($stmt, "ii", $campaignID, $userID);
+
+                    if (mysqli_stmt_execute($stmt)) {
+                        $message = "Успешно се пријавивте за кампањата!";
+                        $messageType = "success"; // Success message
+                        // Update the number of registered users in the campaigns table
+                        $updateRegisteredUsersSQL = "UPDATE campaigns SET RegisteredUsers = RegisteredUsers + 1 WHERE CampaignID = ?";
+                        $stmt = mysqli_prepare($conn, $updateRegisteredUsersSQL);
+                        mysqli_stmt_bind_param($stmt, "i", $campaignID);
+                        mysqli_stmt_execute($stmt);
+                        mysqli_stmt_close($stmt);
+
+                    } else {
+                        $message = "Настана грешка при пријавувањето. Обидете се повторно.";
+                        $messageType = "danger"; // Error message
+                    }
                 }
             }
         }

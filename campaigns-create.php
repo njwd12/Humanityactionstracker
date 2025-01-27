@@ -1,38 +1,53 @@
-<?php 
+<?php
 require_once('db_connection.php');
+session_start(); // Start session to get the logged-in user's ID
+
+// Check if the user is logged in, assuming the session has a 'user_id' key
+if (!isset($_SESSION['user_id'])) {
+    die("Мора да се најавите.");
+}
+
+// Get the logged-in user's ID
+$loggedInUserID = $_SESSION['user_id'];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Промени во полињата за кампања
+    // Campaign fields
     $Name = $_POST['Name'] ?? '';
     $Description = $_POST['Description'] ?? '';
     $StartDate = $_POST['StartDate'] ?? '';
     $EndDate = $_POST['EndDate'] ?? null;
     $TargetAmount = $_POST['TargetAmount'] ?? 0;
     $OrganizerID = $_POST['OrganizerID'] ?? null;
-    $Status = 'pending'; // Статусот по дефолт ќе биде 'pending'
+    $Status = 'pending'; // Default status
 
-    // Проверка дали сите задолжителни полиња се пополнети
+    // Validate if all required fields are filled
     if (!empty($Name) && !empty($Description) && !empty($StartDate) && !empty($TargetAmount) && $OrganizerID !== null) {
-        // Внесување на кампањата во базата на податоци
-        $stmt = $conn->prepare("INSERT INTO campaigns (Name, Description, StartDate, EndDate, TargetAmount, OrganizerID, Status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        
-        // Извршување на SQL изјавата
-        if ($stmt->execute([$Name, $Description, $StartDate, $EndDate, $TargetAmount, $OrganizerID, $Status])) {
-            // Пренасочување кон страница што го информира корисникот дека настанот е на чекање
-            header("Location: campaign_pending.php");
-            exit();
+        // Check if the OrganizerID matches the logged-in user's ID
+        if ($OrganizerID == $loggedInUserID) {
+            // Insert the campaign into the database
+            $stmt = $conn->prepare("INSERT INTO campaigns (Name, Description, StartDate, EndDate, TargetAmount, OrganizerID, Status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            
+            // Execute SQL statement
+            if ($stmt->execute([$Name, $Description, $StartDate, $EndDate, $TargetAmount, $OrganizerID, $Status])) {
+                // Redirect to a page informing the user that the campaign is pending
+                header("Location: campaign_pending.php");
+                exit();
+            } else {
+                // Error if the campaign insertion fails
+                $error = "Грешка при додавање на настан.";
+            }
         } else {
-            // Грешка ако не е успешно додавање на кампањата
-            $error = "Грешка при додавање на настан.";
+            // Error if the OrganizerID does not match the logged-in user's ID
+            $error = "Не можете да креирате кампања со ID на друг организатор.";
         }
     } else {
-        // Грешка ако не се пополнети сите задолжителни полиња
+        // Error if required fields are not filled
         $error = "Пополнете ги сите задолжителни полиња.";
     }
 }
 ?>
 
-<!-- Страница за креирање на кампања -->
+<!-- Page for creating a campaign -->
 <!DOCTYPE html>
 <html lang="mk">
 <head>

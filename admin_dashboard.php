@@ -92,42 +92,31 @@
     <div class="container fade-in">
         <h2>Админ Панел - Чекачки Кампањи</h2>
         <?php
-require_once('db_connection.php');
+        require_once('db_connection.php');
 
-// Избор на кампањи со статус 'pending'
-$sql = "SELECT * FROM `campaigns` WHERE `Status` = 'pending'";
-$result = $conn->query($sql);
+        // Избор на кампањи со статус 'pending'
+        $sql = "SELECT * FROM campaigns WHERE Status = 'pending'";
+        $result = $conn->query($sql);
 
-// Преглед на сите кампањи на чекање
-while ($row = $result->fetch_assoc()) {
-    echo "<div class='campaign'>
-            <h5>" . htmlspecialchars($row['Name']) . "</h5>
-            <p>" . htmlspecialchars($row['Description']) . "</p>
-            <form method='POST' action='approve_campaign.php'>
-                <input type='hidden' name='CampaignID' value='" . $row['CampaignID'] . "'>
-                <button type='submit' class='btn btn-success'>Одобри</button>
-            </form>
-        </div>";
-}
-?>
+        // Преглед на сите кампањи на чекање
+        while ($row = $result->fetch_assoc()) {
+            echo "<div class='campaign'>
+                    <h5>" . htmlspecialchars($row['Name']) . "</h5>
+                    <p>" . htmlspecialchars($row['Description']) . "</p>
+                    <form method='POST' action='approve_campaign.php'>
+                        <input type='hidden' name='CampaignID' value='" . $row['CampaignID'] . "'>
+                        <button type='submit' class='btn btn-success'>Одобри</button>
+                    </form>
+                    <form method='POST' action='reject_campaign.php'>
+                        <input type='hidden' name='CampaignID' value='" . $row['CampaignID'] . "'>
+                        <button type='submit' class='btn btn-danger'>Одбие</button>
+                    </form>
+                </div>";
+        }
+        ?>
         <!-- Ако нема кампањи за одобрување -->
         <?php if ($result->num_rows == 0) : ?>
             <p>Нема нови кампањи за одобрување.</p>
-        <?php else: ?>
-            <div class="campaign-list">
-                <?php while ($campaign = $result->fetch_assoc()) : ?>
-                    <div class="campaign">
-                        <div>
-                            <h5><?php echo htmlspecialchars($campaign['name']); ?></h5>
-                            <p><?php echo htmlspecialchars($campaign['description']); ?></p>
-                        </div>
-                        <div>
-                            <a href="approve_campaign.php?id=<?php echo $campaign['id']; ?>" class="btn btn-success">Одобри</a>
-                            <a href="reject_campaign.php?id=<?php echo $campaign['id']; ?>" class="btn btn-danger">Одбие</a>
-                        </div>
-                    </div>
-                <?php endwhile; ?>
-            </div>
         <?php endif; ?>
     </div>
 
