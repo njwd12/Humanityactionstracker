@@ -1,53 +1,37 @@
 <?php
-require_once('db_connection.php');
-session_start(); // Start session to get the logged-in user's ID
-
-// Check if the user is logged in, assuming the session has a 'user_id' key
-if (!isset($_SESSION['user_id'])) {
-    die("Мора да се најавите.");
-}
-
-// Get the logged-in user's ID
-$loggedInUserID = $_SESSION['user_id'];
+require_once 'db_connection.php'; // Осигурај се дека имаш поврзување со базата
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Campaign fields
-    $Name = $_POST['Name'] ?? '';
-    $Description = $_POST['Description'] ?? '';
-    $StartDate = $_POST['StartDate'] ?? '';
-    $EndDate = $_POST['EndDate'] ?? null;
-    $TargetAmount = $_POST['TargetAmount'] ?? 0;
-    $OrganizerID = $_POST['OrganizerID'] ?? null;
-    $Status = 'pending'; // Default status
+    $Name = trim($_POST['Name']);
+    $Description = trim($_POST['Description']);
+    $StartDate = $_POST['StartDate'];
+    $EndDate = !empty($_POST['EndDate']) ? $_POST['EndDate'] : NULL; // Дозволи NULL вредност ако не е внесена
+    $TargetAmount = $_POST['TargetAmount'];
+    $OrganizerID = $_POST['OrganizerID'];
+    $Status = 'pending'; // Секогаш постави 'pending'
 
-    // Validate if all required fields are filled
-    if (!empty($Name) && !empty($Description) && !empty($StartDate) && !empty($TargetAmount) && $OrganizerID !== null) {
-        // Check if the OrganizerID matches the logged-in user's ID
-        if ($OrganizerID == $loggedInUserID) {
-            // Insert the campaign into the database
-            $stmt = $conn->prepare("INSERT INTO campaigns (Name, Description, StartDate, EndDate, TargetAmount, OrganizerID, Status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            
-            // Execute SQL statement
-            if ($stmt->execute([$Name, $Description, $StartDate, $EndDate, $TargetAmount, $OrganizerID, $Status])) {
-                // Redirect to a page informing the user that the campaign is pending
-                header("Location: campaign_pending.php");
-                exit();
-            } else {
-                // Error if the campaign insertion fails
-                $error = "Грешка при додавање на настан.";
-            }
+    try {
+        $sql = "INSERT INTO campaigns (Name, Description, StartDate, EndDate, TargetAmount, OrganizerID, Status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssssdis", $Name, $Description, $StartDate, $EndDate, $TargetAmount, $OrganizerID, $Status);
+        $stmt->execute();
+
+        if ($stmt->affected_rows > 0) {
+            echo "<div class='alert alert-success'>Кампањата е успешно креирана!, кампањата ќе се појави откако администраторот ќе ја одобри, за тоа време пратете му го официјалниот документ на неговиот меил.</div>";
         } else {
-            // Error if the OrganizerID does not match the logged-in user's ID
-            $error = "Не можете да креирате кампања со ID на друг организатор.";
+            echo "<div class='alert alert-danger'>Грешка при креирање на кампањата.</div>";
         }
-    } else {
-        // Error if required fields are not filled
-        $error = "Пополнете ги сите задолжителни полиња.";
+
+        $stmt->close();
+        $conn->close();
+    } catch (mysqli_sql_exception $e) {
+        echo "<div class='alert alert-danger'>Грешка: " . $e->getMessage() . "</div>";
     }
 }
 ?>
 
-<!-- Page for creating a campaign -->
 <!DOCTYPE html>
 <html lang="mk">
 <head>
@@ -60,14 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="container mt-5">
         <h1 class="text-center mb-4">Креирај Кампања</h1>
 
-        <?php
-        if (isset($error)) {
-            echo "<div class='alert alert-danger'>$error</div>";
-        }
-        ?>
-
-        <form method="POST" action="campaigns-create.php">
-        
+        <form method="POST" action="">
             <div class="mb-3">
                 <label for="Name" class="form-label">Име на кампањата</label>
                 <input type="text" class="form-control" id="Name" name="Name" required>
@@ -86,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <div class="mb-3">
                 <label for="TargetAmount" class="form-label">Целна сума</label>
-                <input type="number" class="form-control" id="TargetAmount" name="TargetAmount" required>
+                <input type="number" step="0.01" class="form-control" id="TargetAmount" name="TargetAmount" required>
             </div>
             <div class="mb-3">
                 <label for="OrganizerID" class="form-label">ID на организаторот</label>

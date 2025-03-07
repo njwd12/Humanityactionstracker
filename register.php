@@ -42,8 +42,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,9 +50,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     <title>Register</title>
+    <style>
+        body {
+            background: linear-gradient(to right, #f6d365, #fda085);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .register-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 400px;
+        }
+        .form-control {
+            border-radius: 8px;
+        }
+        .btn-success {
+            background-color: #4caf50;
+            border: none;
+            width: 100%;
+        }
+        .btn-success:hover {
+            background-color: #388e3c;
+        }
+        .form-label {
+            font-weight: bold;
+            color: #fff;
+        }
+        .form-text {
+            color: #ddd;
+        }
+        .text-link {
+            color: #ffd700;
+            text-decoration: none;
+        }
+        .text-link:hover {
+            text-decoration: underline;
+        }
+        .toast {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container p-5 d-flex flex-column align-items-center">
+<body>
+    <div class="register-container">
         <?php if ($message): ?>
             <div class="toast align-items-center text-white <?php echo $toastClass; ?>" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="d-flex">
@@ -65,29 +109,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
             </div>
         <?php endif; ?>
-        <form action="" method="post" class="form-control mt-5 p-4" style="height:auto; width:380px; box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;">
+        <form action="" method="post" class="form-control mt-5 p-4">
             <div class="row">
-                <h5 class="text-center p-4" style="font-weight: 700;">Create Account</h5>
+                <h5 class="text-center p-4" style="font-weight: 700; color: #388e3c;">Create Account</h5>
             </div>
-            <div class="col-mb-3">
-            <label for="username">Username</label>
+            <div class="col mb-3">
+                <label for="username" class="form-label"  style="color: green;">Username</label>
                 <input type="text" name="username" id="username" class="form-control" required>
-                </div>
-                <div class="col-mb-3">
-                <label for="email">Email</label>
-                <input type="text" name="email" id="email" class="form-control" required>
-                
             </div>
-            <div class="col mb-3 mt-3">
-                <label for="password">Password</label>
+            <div class="col mb-3">
+                <label for="email" class="form-label" style="color: green;">Email</label>
+                <input type="text" name="email" id="email" class="form-control" required>
+            </div>
+            <div class="col mb-3">
+                <label for="password" class="form-label" style="color: green;">Password</label>
                 <input type="password" name="password" id="password" class="form-control" required>
             </div>
-            <div class="col mb-3 mt-3">
-                <button type="submit" class="btn btn-success bg-success" style="font-weight: 600;">Register</button>
+            <div class="col mb-3">
+                <button type="submit" class="btn btn-success">Register</button>
             </div>
             <div class="col mb-2 mt-4">
-                <p class="text-center" style="font-weight: 600; color: navy;">
-                    <a href="./login.php" style="text-decoration: none;">Already have an account? Login</a>
+                <p class="text-center">
+                    <a href="./login.php" class="text-link">Already have an account? Login</a>
                 </p>
             </div>
         </form>
