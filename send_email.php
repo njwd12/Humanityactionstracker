@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $mail->Host = 'smtp.gmail.com';  // Може да го промениш на твојот SMTP сервер
         $mail->SMTPAuth = true;
         $mail->Username = 'jovanovskinenad1@gmail.com'; // Твојот email за SMTP
-        $mail->Password = 'amsllgmkopzmuraz';  // Твојата лозинка или апликациски лозинка
+        $mail->Password = 'vasatalozinkatuka';  // Твојата лозинка или апликациски лозинка
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
